@@ -107,6 +107,10 @@ def convert_tsv_to_parquet(tsv_path: Path, output_path: Path = None, show_schema
         
         # Read all rows with progress indication
         for i, row in enumerate(reader):
+            # Ensure row is a list (handle malformed data)
+            if isinstance(row, str):
+                row = [row]
+            
             # Clean embedded newlines from fields
             cleaned_row = [field.replace('\n', ' ').replace('\r', ' ') if field else None for field in row]
             rows.append(cleaned_row)
@@ -116,8 +120,21 @@ def convert_tsv_to_parquet(tsv_path: Path, output_path: Path = None, show_schema
     
     print(f"  Loaded {len(rows):,} rows")
     
-    # Convert to Polars DataFrame
-    df = pl.DataFrame({col: [row[i] if i < len(row) else None for row in rows] for i, col in enumerate(header)})
+    # Convert to Polars DataFrame with defensive type checking
+    # Filter out any corrupted rows that aren't lists/sequences
+    valid_rows = []
+    corrupted_count = 0
+    for row in rows:
+        if isinstance(row, (list, tuple)):
+            valid_rows.append(row)
+        else:
+            corrupted_count += 1
+            print(f"  Warning: Skipping corrupted row (type: {type(row).__name__})")
+    
+    if corrupted_count > 0:
+        print(f"  ⚠ Skipped {corrupted_count} corrupted rows due to data issues")
+    
+    df = pl.DataFrame({col: [row[i] if i < len(row) else None for row in valid_rows] for i, col in enumerate(header)})
     
     if show_schema:
         print(f"  Dataset shape: {df.shape}")
@@ -172,7 +189,12 @@ def convert_all_tsvs_to_parquet(data_dir: Path = Path("data")):
         # Show detailed schema only for the main Taxon file
         show_schema = (tsv_file.name == "Taxon.tsv")
         
-        df, parquet_path = convert_tsv_to_parquet(tsv_file, show_schema=show_schema)
+        # Use custom name for Taxon file
+        output_path = None
+        if tsv_file.name == "Taxon.tsv":
+            output_path = data_dir / "raw_gbif__backbone.parquet"
+        
+        df, parquet_path = convert_tsv_to_parquet(tsv_file, output_path=output_path, show_schema=show_schema)
         results[tsv_file.name] = {"dataframe": df, "parquet_path": parquet_path}
         
         total_tsv_size += tsv_file.stat().st_size

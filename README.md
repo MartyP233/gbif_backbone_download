@@ -1,10 +1,10 @@
 # GBIF Taxonomy Downloader
 
-Download and process the GBIF Backbone Taxonomy for fast local taxonomic classification using table joins instead of API calls.
+**Temporary project** to download the GBIF Backbone Taxonomy and prepare it for loading into Microsoft Fabric to support development / iteration for the edna project.
 
 ## Overview
 
-This tool downloads the complete GBIF Backbone Taxonomy (10+ million species) and converts it to Parquet format for efficient querying with Polars. This allows you to perform taxonomic matching locally using fast table joins instead of hitting the GBIF API.
+This is a temporary utility project that downloads the complete GBIF Backbone Taxonomy (10+ million species) and converts it to Parquet format. The resulting `raw_gbif__backbone.parquet` file is then **manually uploaded to the Fabric Species workspace** and converted to a table for use in taxonomic classification workflows.
 
 ## Quick Start
 
@@ -20,77 +20,18 @@ This will:
 1. Download the GBIF Backbone Taxonomy (~1.5 GB)
 2. Extract the taxonomy data
 3. Convert to Parquet format (saves ~70% space)
-4. Save to `data/gbif_backbone.parquet`
+4. Save to `data/raw_gbif__backbone.parquet`
 
-## Usage
+## Workflow
 
-### Basic Loading
+After running the script:
 
-```python
-import polars as pl
+1. The Parquet file `data/raw_gbif__backbone.parquet` is generated locally
+2. **Manually upload** this file to the **Fabric Species workspace**
+3. In Fabric, convert the Parquet file to a table for use in taxonomic workflows
+4. The table can then be used for fast taxonomic matching and classification
 
-# Load the taxonomy (very fast!)
-df = pl.read_parquet("data/gbif_backbone.parquet")
-
-print(f"Loaded {len(df):,} taxonomic records")
-```
-
-### Exact Name Matching
-
-```python
-# Find exact match
-result = df.filter(
-    pl.col("scientificName") == "Homo sapiens"
-)
-print(result)
-```
-
-### Fuzzy Matching
-
-```python
-# Find all species in a genus
-genus_species = df.filter(
-    pl.col("genus") == "Panthera"
-)
-
-# Case-insensitive partial matching
-df.filter(
-    pl.col("scientificName").str.to_lowercase().str.contains("quercus")
-)
-```
-
-### Batch Matching (Join Your Dataset)
-
-```python
-# Your dataset with species names
-your_data = pl.DataFrame({
-    "species_name": ["Homo sapiens", "Panthera leo", "Quercus robur"],
-    "observation_count": [100, 45, 200]
-})
-
-# Join with GBIF taxonomy
-matched = your_data.join(
-    df,
-    left_on="species_name",
-    right_on="scientificName",
-    how="left"
-).select([
-    "species_name",
-    "observation_count",
-    "taxonKey",
-    "taxonomicStatus",
-    "kingdom",
-    "phylum",
-    "class",
-    "order",
-    "family",
-    "genus"
-])
-
-print(matched)
-```
-
-## Key Columns
+## Key Columns in the Backbone
 
 The GBIF Backbone includes these useful columns:
 
@@ -101,14 +42,6 @@ The GBIF Backbone includes these useful columns:
 - `taxonRank`: e.g., SPECIES, GENUS, FAMILY
 - `kingdom`, `phylum`, `class`, `order`, `family`, `genus`, `species`: Taxonomic hierarchy
 - `parentKey`: Link to parent taxon
-
-## Advantages Over API Calls
-
-- **Speed**: 1000x faster - no network latency
-- **Reliability**: No rate limits or network issues
-- **Batch Processing**: Join entire datasets at once
-- **Offline**: Works without internet connection
-- **Cost**: No API quota concerns
 
 ## File Sizes
 
