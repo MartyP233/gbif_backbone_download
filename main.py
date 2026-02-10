@@ -95,7 +95,8 @@ def convert_tsv_to_parquet(tsv_path: Path, output_path: Path = None, show_schema
     
     # Increase field size limit for large fields in GBIF data
     import sys
-    csv.field_size_limit(sys.maxsize)
+    # Use a large but safe limit to avoid overflow on Windows
+    csv.field_size_limit(min(sys.maxsize, 2**31 - 1))
     
     # Read and clean using Python's csv module (handles complex quoting properly)
     rows = []
@@ -570,7 +571,7 @@ def main():
     
     # Step 1: Download the GBIF backbone (will skip if already exists)
     data_dir = Path("data")
-    tsv_path = download_gbif_backbone(output_dir=data_dir)
+    tsv_path = download_gbif_backbone(output_dir=data_dir, force_download=True)
     
     # Step 2: Convert all TSV files to Parquet
     print("\nConverting all TSV files to Parquet format...")
