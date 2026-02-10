@@ -8,12 +8,61 @@ This is a temporary utility project that downloads the complete GBIF Backbone Ta
 
 ## Quick Start
 
+### Option 1: Windows - One-Click Setup (Easiest)
+
+Simply double-click `setup_and_run.bat` or run it from Command Prompt:
+
+```cmd
+setup_and_run.bat
+```
+
+This script will automatically:
+- Check if `uv` is installed (and install it if needed)
+- Install all dependencies using `uv sync`
+- Download and convert the GBIF taxonomy
+
+**Note**: If `uv` is installed for the first time, you'll need to restart the script or open a new command prompt.
+
+### Option 2: Using uv (Manual)
+
+If you want to run commands manually, first install `uv`:
+
+```bash
+# On macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# On Windows
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+Then run the script:
+
 ```bash
 # Install dependencies
 uv sync
 
 # Download and convert GBIF taxonomy
 uv run python main.py
+```
+
+### Option 3: Using pip/venv (Traditional)
+
+If you prefer traditional Python tools:
+
+```bash
+# Create a virtual environment
+python -m venv .venv
+
+# Activate it
+source .venv/bin/activate  # On Linux/macOS
+# or
+.venv\Scripts\activate  # On Windows
+
+# Install dependencies
+pip install requests pyarrow
+
+# Run the script
+python main.py
 ```
 
 This will:
