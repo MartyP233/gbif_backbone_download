@@ -6,6 +6,33 @@
 
 This is a temporary utility project that downloads the complete GBIF Backbone Taxonomy (10+ million species) and converts it to Parquet format. The resulting `raw_gbif__backbone.parquet` file is then **manually uploaded to the Fabric Species workspace** and converted to a table for use in taxonomic classification workflows.
 
+## Prerequisites
+
+### Installing Git
+
+If you don't have Git installed:
+
+1. Download Git from [git-scm.com](https://git-scm.com/download/win)
+2. Run the installer and follow the prompts (default settings work well)
+3. Verify installation by opening Command Prompt and running:
+   ```cmd
+   git --version
+   ```
+
+### Cloning the Repository
+
+Once Git is installed, clone this repository:
+
+```bash
+# Clone the repository
+git clone https://github.com/MartyP233/gbif_backbone_download.git
+
+# Navigate into the project directory
+cd gbif_backbone_download
+```
+
+Now you're ready to proceed with the Quick Start instructions below.
+
 ## Quick Start
 
 ### Option 1: Windows - One-Click Setup (Easiest)
